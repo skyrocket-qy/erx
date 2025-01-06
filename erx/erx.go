@@ -111,3 +111,12 @@ func Cause(err error) error {
 
 	return err
 }
+
+func GetCallStack(err error) string {
+	var errCStk *ErrorCtx
+	if !errors.As(err, &errCStk) {
+		return ""
+	}
+
+	return errCStk.Ctx["CallStack"]
+}

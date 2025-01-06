@@ -1,6 +1,24 @@
 # erx
 A Fully-compatible built-in error but support call stack
 
+## Quick example
+1. Define error type
+```go
+var (
+  ErrDB = errors.New("db error")
+  ErrUnknown = errors.New("unknown error")
+)
+```
+2. New or wrap error
+```go
+if err != nil{
+  return erx.W(err)
+}
+
+if !ok {
+  return erx.New("something wrong")
+}
+
 ## Scenario
 When debug, the error message sometimes hard for developer to find the occur place in code. 
 
@@ -26,13 +44,10 @@ The Problem is:
 - if A() call B() call C() call D(), when error occured, above methods will log 4 times repeated, but in fact, what we need is only one call stack from deeper error
 - When error message show on client side, it is hard to find the real place occured(string search? if most place use same error?)
 
-
-
 ## Target
 - When first error occured, record the call stack
 - Without broken original interface but support callstack
 - Call stack should not propogate to clien, so distinguish client and original msg
-
 
 ## Features
 - errorcode
