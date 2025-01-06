@@ -1,14 +1,19 @@
 package erx
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/google/uuid"
 )
 
-const CallStack = "CallStack"
+const (
+	ID        = "ID"
+	CallStack = "CallStack"
+)
 
 func Is(err error, target error) bool {
 	return errors.Is(err, target)
@@ -36,24 +41,29 @@ func W(err error, texts ...string) error {
 		for i, text := range texts {
 			errs[i] = errors.New(text)
 		}
+		newErr = errors.Join(errs...)
 	}
 
 	var errCStk *ErrorCtx
 	if errors.As(err, &errCStk) {
-		return errors.Join(newErr, errCStk)
+		errCStk.OriginalErr = errors.Join(newErr, errCStk.OriginalErr)
+	} else {
+		errCStk = &ErrorCtx{
+			Ctx: map[string]string{
+				ID:        uuid.NewString(),
+				CallStack: getCallStack(3),
+			},
+			OriginalErr: errors.Join(newErr, err),
+		}
 	}
 
-	return errors.Join(newErr, &ErrorCtx{
-		Ctx: map[string]string{
-			CallStack: getCallStack(3),
-		},
-		OriginalErr: err,
-	})
+	return errCStk
 }
 
 func New(text string) *ErrorCtx {
 	return &ErrorCtx{
 		Ctx: map[string]string{
+			ID:        uuid.NewString(),
 			CallStack: getCallStack(2),
 		},
 		OriginalErr: errors.New(text),
@@ -121,4 +131,40 @@ func GetCallStack(err error) string {
 	}
 
 	return errCStk.Ctx[CallStack]
+}
+
+func GetClientMsg(err error) string {
+	var errCStk *ErrorCtx
+	if !errors.As(err, &errCStk) {
+		return err.Error()
+	}
+
+	type msg struct {
+		ID  string
+		Err string
+	}
+
+	json.Marshal(msg{
+		ID:  errCStk.Ctx[ID],
+		Err: errCStk.OriginalErr.Error(),
+	})
+
+	return fmt.Sprintf("%s\n%s", errCStk.Ctx[ID], fPrintErr(errCStk))
+}
+
+func GetFullMsg(err error) string {
+	var errCStk *ErrorCtx
+	if !errors.As(err, &errCStk) {
+		return err.Error()
+	}
+
+	return fmt.Sprintf("%s\n%s\n%s",
+		errCStk.Ctx[ID],
+		fPrintErr(errCStk),
+		errCStk.Ctx[CallStack])
+}
+
+func fPrintErr(err *ErrorCtx) string {
+	eg := err.OriginalErr.Error()
+	return strings.ReplaceAll(eg, "\n", ": ")
 }
