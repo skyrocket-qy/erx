@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+
+	"github.com/google/uuid"
 )
 
 type ErrorCallStack struct {
@@ -20,74 +22,68 @@ func (e *ErrorCallStack) Unwrap() error {
 }
 
 func Is(err error, target error) bool {
-	var a, b error
-	e1, ok := err.(*ErrorCallStack)
-	if ok {
-		a = e1.OriginalErr
-	} else {
-		a = err
-	}
-	e2, ok := target.(*ErrorCallStack)
-	if ok {
-		b = e2.OriginalErr
-	} else {
-		b = target
-	}
-
-	return errors.Is(a, b)
+	return errors.Is(err, target)
 }
 
 func As(err error, target any) bool {
-	ce, ok := err.(*ErrorCallStack)
-	if ok {
-		return errors.As(ce.OriginalErr, target)
-	}
-
 	return errors.As(err, target)
 }
 
 func Join(errs ...error) error {
-	if len(errs) == 0 {
+	return errors.Join(errs...)
+}
+
+// Wrap wraps the given error with a call stack. If the error is already an
+// ErrorCallStack, it appends additional context (texts) to it. Otherwise,
+// it converts the error to an ErrorCallStack and records the call stack.
+func W(err error, texts ...string) error {
+	if err == nil {
 		return nil
 	}
 
-	var err error
-	for _, e := range errs {
-		if e == nil {
-			continue
-		}
-		e1, ok := e.(*ErrorCallStack)
-		if ok {
-			err = errors.Join(err, e1.OriginalErr)
-		} else {
-			err = errors.Join(err, e)
+	var newErr error
+	if len(texts) > 0 {
+		errs := make([]error, len(texts))
+		for i, text := range texts {
+			errs[i] = errors.New(text)
 		}
 	}
-	return err
-}
 
-// Check err is original error, if true, convert to ErrorCallStack which record
-// call stack
-func Wrap(msg string, err error) error {
-	e1, ok := err.(*ErrorCallStack)
-	if ok {
-		return Join(errors.New(msg), e1)
+	var errCStk *ErrorCallStack
+	if errors.As(err, &errCStk) {
+		return errors.Join(newErr, errCStk)
 	}
-	return Join(errors.New(msg), &ErrorCallStack{
-		CallStack:   getCallStack(),
+
+	return errors.Join(newErr, &ErrorCallStack{
+		CallStack:   getCallStack(3),
 		OriginalErr: err,
 	})
 }
 
 func New(text string) *ErrorCallStack {
 	return &ErrorCallStack{
-		CallStack:   getCallStack(),
+		CallStack:   getCallStack(2),
 		OriginalErr: errors.New(text),
 	}
 }
 
 func Errorf(format string, args ...interface{}) error {
 	return New(fmt.Sprintf(format, args...))
+}
+
+func Log(err error) {
+	var errCStk *ErrorCallStack
+	if !errors.As(err, &errCStk) {
+		return
+	}
+
+	id := uuid.New().String()
+
+	cliMsg := fmt.Sprintf("%s\n%s", id, errCStk.OriginalErr.Error())
+	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.CallStack)
+
+	fmt.Println(cliMsg)
+	fmt.Println(FullMsg)
 }
 
 // default use 2
@@ -101,7 +97,7 @@ func getCallStack(callerSkip ...int) (stkMsg string) {
 
 	frames := runtime.CallersFrames(pc[:n-2])
 
-	stkMsg = "Call stack:"
+	stkMsg = "Call stack:\n"
 
 	for {
 		frame, more := frames.Next()

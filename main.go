@@ -8,15 +8,21 @@ import (
 )
 
 var (
-	ErrUnknown = erx.New("unknown error")
-	ErrDb      = erx.New("db error")
+	ErrUnknown = errors.New("unknown error")
+	ErrDb      = errors.New("db error")
 )
 
 var OgErrDb = errors.New("db error")
 
 func main() {
-	fmt.Println(erx.Is(fmt.Errorf("%w", ErrDb), ErrDb))
-	fmt.Println(erx.Is(erx.Wrap("db error", ErrUnknown), ErrUnknown))
-	fmt.Println(erx.Is(erx.Join(ErrUnknown, ErrDb), ErrDb))
-	fmt.Println(erx.Is(ErrDb, ErrDb))
+	fmt.Println(errors.Is(fmt.Errorf("%w", ErrDb), ErrDb))
+	fmt.Println(errors.Is(erx.W(ErrUnknown, "db error"), ErrUnknown))
+	fmt.Println(errors.Is(errors.Join(ErrUnknown, ErrDb), ErrDb))
+	fmt.Println(errors.Is(ErrDb, ErrDb))
+
+	// erx.Log(ErrUnknown)
+	// erx.Log(erx.Join(ErrUnknown, ErrDb))
+
+	// a := erx.New("gg")
+	erx.Log(erx.W(ErrUnknown))
 }
