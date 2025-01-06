@@ -1,7 +1,6 @@
 package erx
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"runtime"
@@ -74,21 +73,6 @@ func Errorf(format string, a ...any) error {
 	return W(fmt.Errorf(format, a...))
 }
 
-func Log(err error) {
-	var errCStk *ErrorCtx
-	if !errors.As(err, &errCStk) {
-		return
-	}
-
-	id := uuid.New().String()
-
-	cliMsg := fmt.Sprintf("%s\n%s", id, errCStk.OriginalErr.Error())
-	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.Ctx[CallStack])
-
-	fmt.Println(cliMsg)
-	fmt.Println(FullMsg)
-}
-
 // default use 2
 func getCallStack(callerSkip ...int) (stkMsg string) {
 	pc := make([]uintptr, 10)
@@ -133,35 +117,48 @@ func GetCallStack(err error) string {
 	return errCStk.Ctx[CallStack]
 }
 
-func GetClientMsg(err error) string {
+func IsErrCtx(err error) bool {
 	var errCStk *ErrorCtx
 	if !errors.As(err, &errCStk) {
-		return err.Error()
+		return false
 	}
-
-	type msg struct {
-		ID  string
-		Err string
-	}
-
-	json.Marshal(msg{
-		ID:  errCStk.Ctx[ID],
-		Err: errCStk.OriginalErr.Error(),
-	})
-
-	return fmt.Sprintf("%s\n%s", errCStk.Ctx[ID], fPrintErr(errCStk))
+	return true
 }
 
-func GetFullMsg(err error) string {
+type ClientMsg struct {
+	ID  string
+	Err string
+}
+
+func GetClientMsg(err error) (msg ClientMsg, ok bool) {
 	var errCStk *ErrorCtx
 	if !errors.As(err, &errCStk) {
-		return err.Error()
+		return ClientMsg{}, false
 	}
 
-	return fmt.Sprintf("%s\n%s\n%s",
-		errCStk.Ctx[ID],
-		fPrintErr(errCStk),
-		errCStk.Ctx[CallStack])
+	return ClientMsg{
+		ID:  errCStk.Ctx[ID],
+		Err: fPrintErr(errCStk),
+	}, true
+}
+
+type FullMsg struct {
+	ID        string
+	Err       string
+	CallStack string
+}
+
+func GetFullMsg(err error) (msg FullMsg, ok bool) {
+	var errCStk *ErrorCtx
+	if !errors.As(err, &errCStk) {
+		return FullMsg{}, false
+	}
+
+	return FullMsg{
+		ID:        errCStk.Ctx[ID],
+		Err:       fPrintErr(errCStk),
+		CallStack: errCStk.Ctx[CallStack],
+	}, true
 }
 
 func fPrintErr(err *ErrorCtx) string {
