@@ -8,19 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type ErrorCallStack struct {
-	CallStack   string
-	OriginalErr error
-}
-
-func (e *ErrorCallStack) Error() string {
-	return e.OriginalErr.Error()
-}
-
-func (e *ErrorCallStack) Unwrap() error {
-	return e.OriginalErr
-}
-
 func Is(err error, target error) bool {
 	return errors.Is(err, target)
 }
@@ -34,8 +21,8 @@ func Join(errs ...error) error {
 }
 
 // Wrap wraps the given error with a call stack. If the error is already an
-// ErrorCallStack, it appends additional context (texts) to it. Otherwise,
-// it converts the error to an ErrorCallStack and records the call stack.
+// ErrorCtx, it appends additional context (texts) to it. Otherwise,
+// it converts the error to an ErrorCtx and records the call stack.
 func W(err error, texts ...string) error {
 	if err == nil {
 		return nil
@@ -49,20 +36,24 @@ func W(err error, texts ...string) error {
 		}
 	}
 
-	var errCStk *ErrorCallStack
+	var errCStk *ErrorCtx
 	if errors.As(err, &errCStk) {
 		return errors.Join(newErr, errCStk)
 	}
 
-	return errors.Join(newErr, &ErrorCallStack{
-		CallStack:   getCallStack(3),
+	return errors.Join(newErr, &ErrorCtx{
+		Ctx: map[string]string{
+			"CallStack": getCallStack(3),
+		},
 		OriginalErr: err,
 	})
 }
 
-func New(text string) *ErrorCallStack {
-	return &ErrorCallStack{
-		CallStack:   getCallStack(2),
+func New(text string) *ErrorCtx {
+	return &ErrorCtx{
+		Ctx: map[string]string{
+			"CallStack": getCallStack(2),
+		},
 		OriginalErr: errors.New(text),
 	}
 }
@@ -72,7 +63,7 @@ func Errorf(format string, args ...interface{}) error {
 }
 
 func Log(err error) {
-	var errCStk *ErrorCallStack
+	var errCStk *ErrorCtx
 	if !errors.As(err, &errCStk) {
 		return
 	}
@@ -80,7 +71,7 @@ func Log(err error) {
 	id := uuid.New().String()
 
 	cliMsg := fmt.Sprintf("%s\n%s", id, errCStk.OriginalErr.Error())
-	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.CallStack)
+	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.Ctx["CallStack"])
 
 	fmt.Println(cliMsg)
 	fmt.Println(FullMsg)
@@ -107,4 +98,16 @@ func getCallStack(callerSkip ...int) (stkMsg string) {
 		}
 	}
 	return stkMsg
+}
+
+func Cause(err error) error {
+	if jErr, ok := err.(interface{ Unwrap() []error }); ok {
+		joinErrs := jErr.Unwrap()
+
+		if len(joinErrs) > 0 {
+			return joinErrs[len(joinErrs)-1]
+		}
+	}
+
+	return err
 }
