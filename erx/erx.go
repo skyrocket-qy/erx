@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const CallStack = "CallStack"
+
 func Is(err error, target error) bool {
 	return errors.Is(err, target)
 }
@@ -43,7 +45,7 @@ func W(err error, texts ...string) error {
 
 	return errors.Join(newErr, &ErrorCtx{
 		Ctx: map[string]string{
-			"CallStack": getCallStack(3),
+			CallStack: getCallStack(3),
 		},
 		OriginalErr: err,
 	})
@@ -52,14 +54,14 @@ func W(err error, texts ...string) error {
 func New(text string) *ErrorCtx {
 	return &ErrorCtx{
 		Ctx: map[string]string{
-			"CallStack": getCallStack(2),
+			CallStack: getCallStack(2),
 		},
 		OriginalErr: errors.New(text),
 	}
 }
 
-func Errorf(format string, args ...interface{}) error {
-	return New(fmt.Sprintf(format, args...))
+func Errorf(format string, a ...any) error {
+	return W(fmt.Errorf(format, a...))
 }
 
 func Log(err error) {
@@ -71,7 +73,7 @@ func Log(err error) {
 	id := uuid.New().String()
 
 	cliMsg := fmt.Sprintf("%s\n%s", id, errCStk.OriginalErr.Error())
-	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.Ctx["CallStack"])
+	FullMsg := fmt.Sprintf("%s\n%s\n%s", id, errCStk.OriginalErr.Error(), errCStk.Ctx[CallStack])
 
 	fmt.Println(cliMsg)
 	fmt.Println(FullMsg)
@@ -118,5 +120,5 @@ func GetCallStack(err error) string {
 		return ""
 	}
 
-	return errCStk.Ctx["CallStack"]
+	return errCStk.Ctx[CallStack]
 }
