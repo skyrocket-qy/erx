@@ -3,22 +3,20 @@ package main
 import (
 	"errors"
 	"fmt"
+
+	"github.com/skyrocketOoO/erx/erx"
 )
 
+var (
+	ErrUnknown = erx.New("unknown error")
+	ErrDb      = erx.New("db error")
+)
+
+var OgErrDb = errors.New("db error")
+
 func main() {
-	fmt.Println(Is(Wrap("db error", ErrUnknown), ErrUnknown))
-	fmt.Println(Is(Join(ErrUnknown, ErrDb), ErrUnknown))
-	fmt.Println(Is(ErrDb, ErrDb))
-}
-
-func A() error {
-	return B()
-}
-
-func B() error {
-	return C()
-}
-
-func C() error {
-	return errors.New(getCallStack())
+	fmt.Println(erx.Is(fmt.Errorf("%w", ErrDb), ErrDb))
+	fmt.Println(erx.Is(erx.Wrap("db error", ErrUnknown), ErrUnknown))
+	fmt.Println(erx.Is(erx.Join(ErrUnknown, ErrDb), ErrDb))
+	fmt.Println(erx.Is(ErrDb, ErrDb))
 }
