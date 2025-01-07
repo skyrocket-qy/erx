@@ -26,7 +26,7 @@ func Join(errs ...error) error {
 	return errors.Join(errs...)
 }
 
-// Wrap wraps the given error with a call stack. If the error is already an
+// Wraps the given error with a call stack. If the error is already an
 // ErrorCtx, it appends additional context (texts) to it. Otherwise,
 // it converts the error to an ErrorCtx and records the call stack.
 func W(err error, texts ...string) error {

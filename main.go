@@ -35,4 +35,9 @@ func main() {
 
 	// a := erx.New("gg")
 	// erx.Log(erx.W(ErrUnknown))
+
+	errDb := errors.New("err db")
+	errUnknow := errors.New("err unknow")
+	e2 := errors.Join(errDb, errUnknow)
+	fmt.Println(errors.Is(e2, errors.New("err unknow")))
 }
