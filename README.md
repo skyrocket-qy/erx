@@ -1,7 +1,7 @@
 # erx
 A Fully-compatible built-in error but support call stack
 
-## Quick example
+## Quick start
 1. Define error type
 ```go
 var (
@@ -9,8 +9,12 @@ var (
   ErrUnknown = errors.New("unknown error")
 )
 ```
-2. New or wrap error
+2. New or wrap error or add something
 ```go
+if err != nil{
+  return erx.Errorf("somethin wrong: %w", err)
+}
+
 if err != nil{
   return erx.W(err)
 }
