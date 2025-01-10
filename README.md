@@ -22,7 +22,7 @@ if err != nil{
 if !ok {
   return erx.New("something wrong")
 }
-
+```
 ## Scenario
 When debug, the error message sometimes hard for developer to find the occur place in code. 
 
