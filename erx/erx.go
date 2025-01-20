@@ -174,3 +174,14 @@ func In(err error, targets []error) bool {
 	}
 	return false
 }
+
+// Recursively unwraps the error to get the root cause.
+func RUnwrap(err error) error {
+	for {
+		unwrapped := errors.Unwrap(err)
+		if unwrapped == nil {
+			return err
+		}
+		err = unwrapped
+	}
+}
