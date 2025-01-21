@@ -34,25 +34,20 @@ func W(err error, texts ...string) error {
 		return nil
 	}
 
-	var newErr error
-	if len(texts) > 0 {
-		errs := make([]error, len(texts))
-		for i, text := range texts {
-			errs[i] = errors.New(text)
-		}
-		newErr = errors.Join(errs...)
+	for _, text := range texts {
+		err = errors.Join(errors.New(text), err)
 	}
 
 	var errCStk *ErrorCtx
 	if errors.As(err, &errCStk) {
-		errCStk.OriginalErr = errors.Join(newErr, errCStk.OriginalErr)
+		errCStk.OriginalErr = err
 	} else {
 		errCStk = &ErrorCtx{
 			Ctx: map[string]string{
 				ID:        uuid.NewString(),
 				CallStack: getCallStack(3),
 			},
-			OriginalErr: errors.Join(newErr, err),
+			OriginalErr: err,
 		}
 	}
 
@@ -96,10 +91,15 @@ func getCallStack(callerSkip ...int) (stkMsg string) {
 	return stkMsg
 }
 
+// Get the root cause of the error
+// only support join erros or erx error
 func Cause(err error) error {
+	if errCtx, ok := err.(*ErrorCtx); ok {
+		err = errCtx.Unwrap()
+	}
+
 	if jErr, ok := err.(interface{ Unwrap() []error }); ok {
 		joinErrs := jErr.Unwrap()
-
 		if len(joinErrs) > 0 {
 			return joinErrs[len(joinErrs)-1]
 		}
@@ -176,6 +176,7 @@ func In(err error, targets []error) bool {
 }
 
 // Recursively unwraps the error to get the root cause.
+// only support single chain of errors
 func RUnwrap(err error) error {
 	for {
 		unwrapped := errors.Unwrap(err)
