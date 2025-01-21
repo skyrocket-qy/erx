@@ -1,5 +1,7 @@
 # erx
-A Fully-compatible built-in error but support call stack
+A compatible built-in error but support call stack
+
+!!!Not support single chain error!!!
 
 ## Quick start
 1. Define error type
