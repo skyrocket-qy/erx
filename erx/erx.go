@@ -14,14 +14,17 @@ const (
 	CallStack = "CallStack"
 )
 
+// Same as errors.Is
 func Is(err error, target error) bool {
 	return errors.Is(err, target)
 }
 
+// Same as errors.As
 func As(err error, target any) bool {
 	return errors.As(err, target)
 }
 
+// Same as errors.Join
 func Join(errs ...error) error {
 	return errors.Join(errs...)
 }

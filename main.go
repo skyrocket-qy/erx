@@ -47,7 +47,7 @@ func main() {
 	err2 := errors.New("network timeout")
 
 	// Join the errors into one
-	joinedErr := errors.Join(err1, err2)
+	joinedErr := erx.Join(err1, err2)
 	joinedErr = erx.W(joinedErr)
 
 	// Now we want to access all the errors from the joined error.
