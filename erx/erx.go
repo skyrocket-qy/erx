@@ -3,6 +3,7 @@ package erx
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"runtime"
 	"strings"
 
@@ -188,4 +189,26 @@ func RUnwrap(err error) error {
 		}
 		err = unwrapped
 	}
+}
+
+// From top-down error, check if it can map to non-500 http code
+// return it, if not found, return 500
+// not support single chain of errors
+func ToHttpCode(err error, mapping func(err error) int) int {
+	if errCtx, ok := err.(*ErrorCtx); ok {
+		err = errCtx.Unwrap()
+	}
+
+	if jErr, ok := err.(interface{ Unwrap() []error }); ok {
+		joinErrs := jErr.Unwrap()
+		for _, e := range joinErrs {
+			if code := mapping(e); code != http.StatusInternalServerError {
+				return code
+			}
+		}
+	} else {
+		return mapping(err)
+	}
+
+	return http.StatusInternalServerError
 }
