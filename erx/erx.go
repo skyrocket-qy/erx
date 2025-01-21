@@ -212,3 +212,4 @@ func ToHttpCode(err error, mapping func(err error) int) int {
 
 	return http.StatusInternalServerError
 }
+
