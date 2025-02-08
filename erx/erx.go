@@ -38,14 +38,15 @@ func W(err error, texts ...string) error {
 		return nil
 	}
 
-	for _, text := range texts {
-		err = errors.Join(errors.New(text), err)
-	}
-
 	var errCStk *ErrorCtx
 	if errors.As(err, &errCStk) {
-		errCStk.OriginalErr = err
+		for _, text := range texts {
+			errCStk.OriginalErr = errors.Join(errors.New(text), errCStk.OriginalErr)
+		}
 	} else {
+		for _, text := range texts {
+			err = errors.Join(errors.New(text), err)
+		}
 		errCStk = &ErrorCtx{
 			Ctx: map[string]string{
 				ID:        uuid.NewString(),
@@ -212,4 +213,3 @@ func ToHttpCode(err error, mapping func(err error) int) int {
 
 	return http.StatusInternalServerError
 }
-
