@@ -16,7 +16,11 @@ func TestWrapPreservesOriginalError(t *testing.T) {
 
 	// Assert that the original error is preserved
 	if !errors.Is(wrappedErr, originalErr) {
-		t.Errorf("wrapped error does not match original error: got %v, want %v", wrappedErr, originalErr)
+		t.Errorf(
+			"wrapped error does not match original error: got %v, want %v",
+			wrappedErr,
+			originalErr,
+		)
 	}
 
 	// Extract ErrorCtx and check the OriginalErr
@@ -36,7 +40,11 @@ func TestWrapErrorWithAdditionalContext(t *testing.T) {
 
 	// Assert that the original error is preserved
 	if !errors.Is(wrappedErr, originalErr) {
-		t.Errorf("wrapped error does not match original error: got %v, want %v", wrappedErr, originalErr)
+		t.Errorf(
+			"wrapped error does not match original error: got %v, want %v",
+			wrappedErr,
+			originalErr,
+		)
 	}
 
 	// Extract ErrorCtx and check the OriginalErr
@@ -46,7 +54,11 @@ func TestWrapErrorWithAdditionalContext(t *testing.T) {
 	}
 
 	if !errors.Is(errCtx.OriginalErr, originalErr) {
-		t.Errorf("OriginalErr in ErrorCtx does not match original error: got %v, want %v", errCtx.OriginalErr, originalErr)
+		t.Errorf(
+			"OriginalErr in ErrorCtx does not match original error: got %v, want %v",
+			errCtx.OriginalErr,
+			originalErr,
+		)
 	}
 }
 
@@ -57,7 +69,11 @@ func TestNewErrorCtx(t *testing.T) {
 
 	// Check that the OriginalErr is set correctly
 	if errCtx.Error() != text {
-		t.Errorf("OriginalErr in ErrorCtx does not match input text: got %v, want %v", errCtx.OriginalErr.Error(), text)
+		t.Errorf(
+			"OriginalErr in ErrorCtx does not match input text: got %v, want %v",
+			errCtx.OriginalErr.Error(),
+			text,
+		)
 	}
 
 	// Check that the CallStack and ID are populated
@@ -83,6 +99,10 @@ func TestUnwrapPreservesOriginalError(t *testing.T) {
 	}
 
 	if unwrappedErr := errCtx.Unwrap(); !errors.Is(unwrappedErr, originalErr) {
-		t.Errorf("Unwrap did not return the original error: got %v, want %v", unwrappedErr, originalErr)
+		t.Errorf(
+			"Unwrap did not return the original error: got %v, want %v",
+			unwrappedErr,
+			originalErr,
+		)
 	}
 }

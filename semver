@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+# Fetch tags to ensure we’re working with the latest
+git fetch --tags
+
+# Get the latest tag matching semver (vX.Y.Z)
+latest_tag=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+
+if [ -z "$latest_tag" ]; then
+  echo "No valid semver tag found. Starting with v0.1.0"
+  new_tag="v0.1.0"
+else
+  echo "Latest tag: $latest_tag"
+
+  # Strip the "v" prefix
+  version=${latest_tag#v}
+  IFS='.' read -r major minor patch <<< "$version"
+
+  # Bump patch
+  patch=$((patch + 1))
+  new_tag="v$major.$minor.$patch"
+fi
+
+# Tag the current commit
+git tag "$new_tag"
+git push origin "$new_tag"
+
+echo "Tagged current commit with $new_tag"
