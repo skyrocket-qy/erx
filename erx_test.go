@@ -1,10 +1,8 @@
-package erx_test
+package erx
 
 import (
 	"errors"
 	"testing"
-
-	"github.com/skyrocketOoO/erx/erx"
 )
 
 func TestWrapPreservesOriginalError(t *testing.T) {
@@ -12,7 +10,7 @@ func TestWrapPreservesOriginalError(t *testing.T) {
 	originalErr := errors.New("original error")
 
 	// Wrap the error without additional context
-	wrappedErr := erx.W(originalErr)
+	wrappedErr := W(originalErr)
 
 	// Assert that the original error is preserved
 	if !errors.Is(wrappedErr, originalErr) {
@@ -24,7 +22,7 @@ func TestWrapPreservesOriginalError(t *testing.T) {
 	}
 
 	// Extract ErrorCtx and check the OriginalErr
-	var errCtx *erx.ErrorCtx
+	var errCtx *ErrorCtx
 	if !errors.As(wrappedErr, &errCtx) {
 		t.Errorf("wrapped error is not of type *ErrorCtx: got %T", wrappedErr)
 	}
@@ -36,7 +34,7 @@ func TestWrapErrorWithAdditionalContext(t *testing.T) {
 
 	// Wrap the error with additional context
 	texts := []string{"context 1", "context 2"}
-	wrappedErr := erx.W(originalErr, texts...)
+	wrappedErr := W(originalErr, texts...)
 
 	// Assert that the original error is preserved
 	if !errors.Is(wrappedErr, originalErr) {
@@ -48,7 +46,7 @@ func TestWrapErrorWithAdditionalContext(t *testing.T) {
 	}
 
 	// Extract ErrorCtx and check the OriginalErr
-	var errCtx *erx.ErrorCtx
+	var errCtx *ErrorCtx
 	if !errors.As(wrappedErr, &errCtx) {
 		t.Errorf("wrapped error is not of type *ErrorCtx: got %T", wrappedErr)
 	}
@@ -65,7 +63,7 @@ func TestWrapErrorWithAdditionalContext(t *testing.T) {
 func TestNewErrorCtx(t *testing.T) {
 	// Create a new ErrorCtx using New
 	text := "new error"
-	errCtx := erx.New(text)
+	errCtx := New(text)
 
 	// Check that the OriginalErr is set correctly
 	if errCtx.Error() != text {
@@ -90,10 +88,10 @@ func TestUnwrapPreservesOriginalError(t *testing.T) {
 	originalErr := errors.New("original error")
 
 	// Wrap the error
-	wrappedErr := erx.W(originalErr)
+	wrappedErr := W(originalErr)
 
 	// Extract ErrorCtx and unwrap the error
-	var errCtx *erx.ErrorCtx
+	var errCtx *ErrorCtx
 	if !errors.As(wrappedErr, &errCtx) {
 		t.Errorf("wrapped error is not of type *ErrorCtx: got %T", wrappedErr)
 	}
