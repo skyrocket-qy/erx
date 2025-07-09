@@ -124,10 +124,7 @@ func GetCallStack(err error) string {
 
 func IsErrCtx(err error) bool {
 	var errCStk *ErrorCtx
-	if !errors.As(err, &errCStk) {
-		return false
-	}
-	return true
+	return errors.As(err, &errCStk)
 }
 
 type ClientMsg struct {
