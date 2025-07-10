@@ -1,4 +1,4 @@
-package erx
+package erx_test
 
 // func TestWrapPreservesOriginalError(t *testing.T) {
 // 	// Define an original error

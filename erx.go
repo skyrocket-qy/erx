@@ -5,17 +5,17 @@ import (
 	"runtime"
 )
 
-var (
-	// TODO: Consider adding a default ErrToCode to avoid nil dereference if not set.
-	// Provide helper functions for users to easily set ErrToCode and create errors.
-	ErrToCode        func(err error) Coder
-	MaxCallStackSize = 10
-)
-
-// Wraps the given error with a call stack. If the error is already an
-// contextError, it appends additional context (texts) to it. Otherwise,
-// it converts the error to an contextError and records the call stack.
-// Not handle texts[1:]
+// W wraps the given error with a call stack and optional additional context.
+//
+// If the error is already a contextError, it prepends the first optional text message
+// to the existing error using errors.Join. The call stack is not updated in this case.
+//
+// If the error is not a contextError, it creates a new contextError with:
+//   - The original error
+//   - A generated call stack (skipping 3 frames)
+//   - An associated error code via ErrToCode
+//
+// Note: Only the first element of texts (if any) is used. texts[1:] are ignored.
 func W(err error, texts ...string) error {
 	if err == nil {
 		return nil
@@ -37,6 +37,13 @@ func W(err error, texts ...string) error {
 	return ctxErr
 }
 
+// New creates a new contextError with the given Coder and optional message.
+//
+// It captures a call stack (skipping 2 frames) and assigns the provided error code.
+// The final error message is constructed from the Coder's message,
+// optionally appending the first element of texts if provided.
+//
+// Note: Only texts[0] is used if texts is non-empty. Additional elements are ignored.
 func New(coder Coder, texts ...string) *contextError {
 	ctxErr := &contextError{
 		callerInfos: getCallStack(2),
@@ -49,26 +56,30 @@ func New(coder Coder, texts ...string) *contextError {
 	}
 
 	ctxErr.err = errors.New(errMsg)
+
 	return ctxErr
 }
 
-func getCallStack(callerSkip ...int) (callerInfos []CallerInfo) {
+func getCallStack(callerSkip ...int) (callerInfos []callerInfo) {
 	pc := make([]uintptr, MaxCallStackSize)
+
 	skip := 2
 	if len(callerSkip) > 0 {
 		skip = callerSkip[0]
 	}
+
 	n := runtime.Callers(skip, pc)
 
 	frames := runtime.CallersFrames(pc[:n])
 
 	for {
 		frame, more := frames.Next()
-		callerInfos = append(callerInfos, CallerInfo{
+		callerInfos = append(callerInfos, callerInfo{
 			Function: frame.Function,
 			File:     frame.File,
 			Line:     frame.Line,
 		})
+
 		if !more {
 			break
 		}
@@ -77,10 +88,18 @@ func getCallStack(callerSkip ...int) (callerInfos []CallerInfo) {
 	return callerInfos
 }
 
-// Get the root cause of the error
-// only support join erros or erx error
+// Cause extracts the root cause from a contextError.
+//
+// If the provided error is not a contextError, it returns the error as-is.
+// If it is a contextError and wraps a joined error (via errors.Join),
+// it returns the last error in the joined chain (assumed to be the original cause).
+// Otherwise, it returns the wrapped error directly.
+//
+// Note: This function only unwraps one level. It does not recurse through nested joins.
 func Cause(err error) error {
-	ctxErr, ok := err.(*contextError)
+	ctxErr := &contextError{}
+
+	ok := errors.As(err, &ctxErr)
 	if !ok {
 		return err
 	}
@@ -92,6 +111,7 @@ func Cause(err error) error {
 		if len(joinErrs) > 0 {
 			return joinErrs[len(joinErrs)-1]
 		}
+
 		return err
 	}
 
@@ -110,7 +130,7 @@ func GetClientMsg(err error) (code string, ok bool) {
 type InternalMsg struct {
 	Cause       error
 	Code        string
-	CallerInfos []CallerInfo
+	CallerInfos []callerInfo
 	Err         error
 }
 
@@ -123,7 +143,7 @@ func GetInternalMsg(err error) (msg InternalMsg, ok bool) {
 	return InternalMsg{
 		Cause:       Cause(err),
 		Code:        ctxErr.code.GetCode(),
-		CallerInfos: ctxErr.getCallStack(),
+		CallerInfos: ctxErr.getCallerInfos(),
 		Err:         ctxErr.err,
 	}, true
 }
