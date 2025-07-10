@@ -13,7 +13,7 @@ type contextError struct {
 }
 
 func (e *contextError) Error() string {
-	return e.code.GetMsg()
+	return e.code.Msg()
 }
 
 func (e *contextError) getCallerInfos() []callerInfo {

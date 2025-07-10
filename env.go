@@ -12,10 +12,10 @@ const (
 	Unknown CoderImp = "Unknown"
 )
 
-func (c CoderImp) GetCode() string {
+func (c CoderImp) Code() string {
 	return string(c)
 }
 
-func (c CoderImp) GetMsg() string {
+func (c CoderImp) Msg() string {
 	return string(c)
 }

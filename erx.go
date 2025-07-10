@@ -50,7 +50,7 @@ func New(coder Coder, texts ...string) *contextError {
 		code:        coder,
 	}
 
-	errMsg := coder.GetMsg()
+	errMsg := coder.Msg()
 	if len(texts) > 0 {
 		errMsg = errMsg + ", " + texts[0]
 	}
@@ -124,7 +124,7 @@ func GetClientMsg(err error) (code string, ok bool) {
 		return "", false
 	}
 
-	return ctxErr.code.GetCode(), true
+	return ctxErr.code.Code(), true
 }
 
 type InternalMsg struct {
@@ -142,7 +142,7 @@ func GetInternalMsg(err error) (msg InternalMsg, ok bool) {
 
 	return InternalMsg{
 		Cause:       Cause(err),
-		Code:        ctxErr.code.GetCode(),
+		Code:        ctxErr.code.Code(),
 		CallerInfos: ctxErr.getCallerInfos(),
 		Err:         ctxErr.err,
 	}, true
