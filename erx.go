@@ -139,13 +139,13 @@ func Cause(err error) error {
 	return err
 }
 
-func GetClientMsg(err error) (code string, ok bool) {
+func GetClientMsg(err error) (code Coder, ok bool) {
 	var ctxErr *contextError
 	if !errors.As(err, &ctxErr) {
-		return "", false
+		return nil, false
 	}
 
-	return ctxErr.code.Code(), true
+	return ctxErr.code, true
 }
 
 type InternalMsg struct {
