@@ -9,6 +9,7 @@ A compatible built-in error but support call stack
 Define error type
 
 ```go
+const
 var (
   ErrDB = errors.New("db error")
   ErrUnknown = errors.New("unknown error")

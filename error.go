@@ -1,14 +1,34 @@
 package erx
 
-type ErrorCtx struct {
-	OriginalErr error
-	Ctx         map[string]string
+// type ErrorCtx struct {
+// 	OriginalErr error
+// 	Ctx         map[string]string
+// }
+
+// func (e *ErrorCtx) Error() string {
+// 	return e.OriginalErr.Error()
+// }
+
+// func (e *ErrorCtx) Unwrap() error {
+// 	return e.OriginalErr
+// }
+
+type CallerInfo struct {
+	Function string
+	File     string
+	Line     int
 }
 
-func (e *ErrorCtx) Error() string {
-	return e.OriginalErr.Error()
+type contextError struct {
+	err         error
+	code        Coder
+	callerInfos []CallerInfo
 }
 
-func (e *ErrorCtx) Unwrap() error {
-	return e.OriginalErr
+func (e *contextError) Error() string {
+	return e.err.Error()
+}
+
+func (e *contextError) getCallStack() []CallerInfo {
+	return e.callerInfos
 }

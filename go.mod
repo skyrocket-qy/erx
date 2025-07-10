@@ -4,10 +4,7 @@ replace github.com/skyrocketOoO/erx => ./
 
 go 1.24.4
 
-require (
-	github.com/google/uuid v1.6.0
-	gorm.io/gorm v1.30.0
-)
+require gorm.io/gorm v1.30.0
 
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
