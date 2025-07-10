@@ -37,6 +37,27 @@ func W(err error, texts ...string) error {
 	return ctxErr
 }
 
+func WCode(code Coder, err error, texts ...string) error {
+	if err == nil {
+		return nil
+	}
+
+	var ctxErr *contextError
+	if errors.As(err, &ctxErr) {
+		if len(texts) > 0 {
+			ctxErr.err = errors.Join(errors.New(texts[0]), ctxErr.err)
+		}
+	} else {
+		ctxErr = &contextError{
+			callerInfos: getCallStack(3),
+			code:        code,
+			err:         err,
+		}
+	}
+
+	return ctxErr
+}
+
 // New creates a new contextError with the given Coder and optional message.
 //
 // It captures a call stack (skipping 2 frames) and assigns the provided error code.
