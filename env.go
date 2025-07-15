@@ -2,6 +2,6 @@ package erx
 
 var MaxCallStackSize = 10
 
-var ErrToCode = func(err error) Coder {
+var ErrToCode = func(err error) Code {
 	return ErrUnknown
 }
