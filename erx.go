@@ -2,21 +2,14 @@ package erx
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
+	"strings"
 )
 
 // W wraps the given error with a call stack and optional additional context.
-//
-// If the error is already a contextError, it prepends the first optional text message
-// to the existing error using errors.Join. The call stack is not updated in this case.
-//
-// If the error is not a contextError, it creates a new contextError with:
-//   - The original error
-//   - A generated call stack (skipping 3 frames)
-//   - An associated error code via ErrToCode
-//
-// Note: Only the first element of texts (if any) is used. texts[1:] are ignored.
-func W(err error, texts ...string) error {
+// the ctx is tricky format, len = 0 : no context, len = 1: raw string, len > 1:
+func W(err error, ctx ...string) error {
 	if err == nil {
 		return nil
 	}
@@ -37,7 +30,7 @@ func W(err error, texts ...string) error {
 	return ctxErr
 }
 
-func WCode(code Coder, err error, texts ...string) error {
+func WCode(code Code, err error, texts ...string) error {
 	if err == nil {
 		return nil
 	}
@@ -58,25 +51,11 @@ func WCode(code Coder, err error, texts ...string) error {
 	return ctxErr
 }
 
-// New creates a new contextError with the given Coder and optional message.
-//
-// It captures a call stack (skipping 2 frames) and assigns the provided error code.
-// The final error message is constructed from the Coder's message,
-// optionally appending the first element of texts if provided.
-//
-// Note: Only texts[0] is used if texts is non-empty. Additional elements are ignored.
-func New(coder Coder, texts ...string) *contextError {
-	ctxErr := &contextError{
-		callerInfos: getCallStack(2),
-		code:        coder,
+func New(code Code, texts ...string) *CxtErr {
+	ctxErr := &CxtErr{
+		CallerInfos: getCallStack(2),
+		Code:        code,
 	}
-
-	errMsg := coder.Code()
-	if len(texts) > 0 {
-		errMsg = errMsg + ", " + texts[0]
-	}
-
-	ctxErr.err = errors.New(errMsg)
 
 	return ctxErr
 }
@@ -139,7 +118,7 @@ func Cause(err error) error {
 	return err
 }
 
-func GetClientMsg(err error) (code Coder, ok bool) {
+func GetClientMsg(err error) (code Code, ok bool) {
 	var ctxErr *contextError
 	if !errors.As(err, &ctxErr) {
 		return nil, false
@@ -167,4 +146,56 @@ func GetInternalMsg(err error) (msg InternalMsg, ok bool) {
 		CallerInfos: ctxErr.getCallerInfos(),
 		Err:         ctxErr.err,
 	}, true
+}
+
+func W(err error, ctx ...any) error {
+	im, ok := err.(*InternalMsg)
+	if !ok {
+		im = New(err) // capture stack
+	}
+
+	// Add context to the correct frame
+	file, line := currentFileLine()
+	frame := findFrame(im.StackTrace, file, line)
+	if frame == -1 {
+		frame = 0 // fallback
+	}
+
+	// Process context
+	switch len(ctx) {
+	case 0:
+		// no context
+	case 1:
+		// raw string
+		if s, ok := ctx[0].(string); ok {
+			im.PerFrame[frame] = append(im.PerFrame[frame], s)
+		}
+	default:
+		// maybe key-value or format string
+		if format, ok := ctx[0].(string); ok && strings.Contains(format, "%") {
+			// treat as fmt.Sprintf
+			im.PerFrame[frame] = append(im.PerFrame[frame], fmt.Sprintf(format, ctx[1:]...))
+		} else if len(ctx)%2 == 0 {
+			// treat as k/v
+			for i := 0; i < len(ctx); i += 2 {
+				k, ok1 := ctx[i].(string)
+				v := fmt.Sprint(ctx[i+1])
+				if !ok1 {
+					continue
+				}
+				kv := fmt.Sprintf("%s:%s", k, v)
+				im.PerFrame[frame] = append(im.PerFrame[frame], kv)
+				// optionally: store in Fields map for logging
+			}
+		} else {
+			// fallback: stringify everything
+			joined := make([]string, len(ctx))
+			for i, v := range ctx {
+				joined[i] = fmt.Sprint(v)
+			}
+			im.PerFrame[frame] = append(im.PerFrame[frame], strings.Join(joined, " "))
+		}
+	}
+
+	return im
 }

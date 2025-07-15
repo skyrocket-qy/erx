@@ -6,16 +6,12 @@ type CallerInfo struct {
 	Line     int
 }
 
-type contextError struct {
-	err         error
-	code        Coder
-	callerInfos []CallerInfo
+type CxtErr struct {
+	ThirdpartyErr *error
+	Code          Code
+	CallerInfos   []CallerInfo
 }
 
-func (e *contextError) Error() string {
-	return e.code.Code()
-}
-
-func (e *contextError) getCallerInfos() []CallerInfo {
-	return e.callerInfos
+func (e *CxtErr) Error() string {
+	return e.Code.Str()
 }

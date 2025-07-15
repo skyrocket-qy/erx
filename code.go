@@ -1,17 +1,17 @@
 package erx
 
-type Coder interface {
-	Code() string
+type Code interface {
+	Str() string
 }
 
-var _ Coder = CoderImp("")
+var _ Code = CodeImp("")
 
-type CoderImp string
+type CodeImp string
 
 const (
-	ErrUnknown CoderImp = "500.0000"
+	ErrUnknown CodeImp = "500.0000"
 )
 
-func (c CoderImp) Code() string {
+func (c CodeImp) Str() string {
 	return string(c)
 }
