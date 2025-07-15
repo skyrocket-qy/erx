@@ -1,6 +1,6 @@
 package erx
 
-type callerInfo struct {
+type CallerInfo struct {
 	Function string
 	File     string
 	Line     int
@@ -9,13 +9,13 @@ type callerInfo struct {
 type contextError struct {
 	err         error
 	code        Coder
-	callerInfos []callerInfo
+	callerInfos []CallerInfo
 }
 
 func (e *contextError) Error() string {
 	return e.code.Code()
 }
 
-func (e *contextError) getCallerInfos() []callerInfo {
+func (e *contextError) getCallerInfos() []CallerInfo {
 	return e.callerInfos
 }

@@ -81,7 +81,7 @@ func New(coder Coder, texts ...string) *contextError {
 	return ctxErr
 }
 
-func getCallStack(callerSkip ...int) (callerInfos []callerInfo) {
+func getCallStack(callerSkip ...int) (callerInfos []CallerInfo) {
 	pc := make([]uintptr, MaxCallStackSize)
 
 	skip := 2
@@ -95,7 +95,7 @@ func getCallStack(callerSkip ...int) (callerInfos []callerInfo) {
 
 	for {
 		frame, more := frames.Next()
-		callerInfos = append(callerInfos, callerInfo{
+		callerInfos = append(callerInfos, CallerInfo{
 			Function: frame.Function,
 			File:     frame.File,
 			Line:     frame.Line,
@@ -151,7 +151,7 @@ func GetClientMsg(err error) (code Coder, ok bool) {
 type InternalMsg struct {
 	Cause       error
 	Code        string
-	CallerInfos []callerInfo
+	CallerInfos []CallerInfo
 	Err         error
 }
 
