@@ -2,7 +2,11 @@ package erx
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
+	"strings"
+
+	"github.com/rs/zerolog"
 )
 
 // W wraps the given error with a call stack and optional additional context.
@@ -167,4 +171,40 @@ func GetInternalMsg(err error) (msg InternalMsg, ok bool) {
 		CallerInfos: ctxErr.getCallerInfos(),
 		Err:         ctxErr.err,
 	}, true
+}
+
+func (im InternalMsg) MarshalZerologObject(e *zerolog.Event) {
+	if im.Cause != nil {
+		e.Str("cause", im.Cause.Error())
+	}
+	if im.Err != nil {
+		e.Str("error", im.Err.Error())
+	}
+	e.Str("code", im.Code)
+
+	// Convert callerInfos to pretty strings
+	formatted := make([]string, 0, len(im.CallerInfos))
+	for _, ci := range im.CallerInfos {
+		shortPath := trimToProject(ci.File)
+		shortFunc := extractFuncName(ci.Function)
+		formatted = append(formatted, fmt.Sprintf("%s %d %s", shortPath, ci.Line, shortFunc))
+	}
+	e.Strs("callerTrace", formatted)
+}
+
+func trimToProject(path string) string {
+	const projectRoot = "/Users/qy/skyro/author/"
+	if rel, ok := strings.CutPrefix(path, projectRoot); ok {
+		return rel
+	}
+	return path
+}
+
+func extractFuncName(fullFunc string) string {
+	// e.g., input: srv/internal/logic/inter.(*Logic).Login
+	// output: (*Logic).Login
+	if idx := strings.LastIndex(fullFunc, "/"); idx >= 0 {
+		return fullFunc[idx+1:]
+	}
+	return fullFunc
 }
