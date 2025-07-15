@@ -71,7 +71,7 @@ func New(coder Coder, texts ...string) *contextError {
 		code:        coder,
 	}
 
-	errMsg := coder.Msg()
+	errMsg := coder.Code()
 	if len(texts) > 0 {
 		errMsg = errMsg + ", " + texts[0]
 	}
