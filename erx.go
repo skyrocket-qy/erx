@@ -225,6 +225,8 @@ func filterCallerInfos(infos []CallerInfo) []CallerInfo {
 	for _, ci := range infos {
 		if strings.HasPrefix(ci.File, projectPrefix) {
 			filtered = append(filtered, ci)
+		} else {
+			break
 		}
 	}
 	return filtered
