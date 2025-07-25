@@ -1,3 +1,3 @@
-module github.com/skyrocketOoO/erx
+module github.com/skyrocket-qy/erx
 
 go 1.24.4
