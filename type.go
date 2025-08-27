@@ -10,11 +10,15 @@ type CallerInfo struct {
 type CtxErr struct {
 	Code        Code
 	CallerInfos []CallerInfo
-	Cause       string // original error message
+	cause       error // original error
 }
 
 func (e *CtxErr) Error() string {
 	return e.Code.Str()
+}
+
+func (e *CtxErr) Unwrap() error {
+	return e.cause
 }
 
 func (e *CtxErr) SetCode(c Code) *CtxErr {

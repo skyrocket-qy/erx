@@ -2,45 +2,50 @@ package erx
 
 import (
 	"errors"
-	"fmt"
 	"runtime"
 )
 
 // W wraps the given error with a call stack and optional additional context.
 func W(err error, msgs ...string) *CtxErr {
+	return w(err, nil, msgs...)
+}
+
+// WCode wraps the given error with a call stack and an error code.
+func WCode(err error, code Code, msgs ...string) *CtxErr {
+	return w(err, code, msgs...)
+}
+
+func w(err error, code Code, msgs ...string) *CtxErr {
 	if err == nil {
 		return nil
 	}
 
 	var ctxErr *CtxErr
 	if !errors.As(err, &ctxErr) {
+		if code == nil {
+			code = ErrToCode(err)
+		}
 		ctxErr = &CtxErr{
-			CallerInfos: getCallStack(3),
-			Code:        ErrToCode(err),
+			cause:       err,
+			CallerInfos: getCallStack(4),
+			Code:        code,
+		}
+	}
+
+	if len(msgs) > 0 {
+		msg := msgs[0]
+		pc, file, line, ok := runtime.Caller(3)
+		if !ok {
+			return ctxErr
 		}
 
-		firstCaller := ctxErr.CallerInfos[0]
-		firstCaller.Msg = fmt.Sprintf("3rd party error: %v", err.Error())
+		funcName := runtime.FuncForPC(pc).Name()
 
-		if len(msgs) > 0 {
-			firstCaller.Msg += " " + msgs[0]
-		}
-	} else {
-		if len(msgs) > 0 {
-			msg := msgs[0]
-			pc, file, line, ok := runtime.Caller(2)
-			if !ok {
-				return ctxErr
-			}
-
-			funcName := runtime.FuncForPC(pc).Name()
-
-			for i := range ctxErr.CallerInfos {
-				ci := &ctxErr.CallerInfos[i]
-				if ci.Function == funcName && ci.File == file && ci.Line == line {
-					ci.Msg += " " + msg
-					break
-				}
+		for i := range ctxErr.CallerInfos {
+			ci := &ctxErr.CallerInfos[i]
+			if ci.Function == funcName && ci.File == file && ci.Line == line {
+				ci.Msg += " " + msg
+				break
 			}
 		}
 	}
@@ -50,13 +55,12 @@ func W(err error, msgs ...string) *CtxErr {
 
 func New(code Code, msgs ...string) *CtxErr {
 	ctxErr := &CtxErr{
-		CallerInfos: getCallStack(2),
+		CallerInfos: getCallStack(3),
 		Code:        code,
 	}
 
-	firstCaller := ctxErr.CallerInfos[0]
 	if len(msgs) > 0 {
-		firstCaller.Msg += " " + msgs[0]
+		ctxErr.CallerInfos[0].Msg = msgs[0]
 	}
 
 	return ctxErr
