@@ -2,6 +2,7 @@ package erx
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
 )
 
@@ -61,6 +62,19 @@ func New(code Code, msgs ...string) *CtxErr {
 
 	if len(msgs) > 0 {
 		ctxErr.CallerInfos[0].Msg = msgs[0]
+	}
+
+	return ctxErr
+}
+
+func Newf(code Code, format string, args ...any) *CtxErr {
+	ctxErr := &CtxErr{
+		CallerInfos: getCallStack(3),
+		Code:        code,
+	}
+
+	if format != "" {
+		ctxErr.CallerInfos[0].Msg = fmt.Sprintf(format, args...)
 	}
 
 	return ctxErr
