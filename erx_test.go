@@ -34,16 +34,21 @@ func TestNew(t *testing.T) {
 		t.Fatal("erx.New should not return nil")
 	}
 
-	if err.Code != ErrTest {
-		t.Errorf("expected code %v, got %v", ErrTest, err.Code)
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
 	}
 
-	if len(err.CallerInfos) == 0 {
+	if ctxErr.Code != ErrTest {
+		t.Errorf("expected code %v, got %v", ErrTest, ctxErr.Code)
+	}
+
+	if len(ctxErr.CallerInfos) == 0 {
 		t.Fatal("expected caller info, got none")
 	}
 
-	if !strings.Contains(err.CallerInfos[0].Msg, "test message") {
-		t.Errorf("expected message 'test message', got '%s'", err.CallerInfos[0].Msg)
+	if !strings.Contains(ctxErr.CallerInfos[0].Msg, "test message") {
+		t.Errorf("expected message 'test message', got '%s'", ctxErr.CallerInfos[0].Msg)
 	}
 }
 
@@ -59,11 +64,16 @@ func TestW_StandardError(t *testing.T) {
 		t.Fatal("expected error to be wrapp`ing stdErr")
 	}
 
-	if err.Code != erx.ErrUnknown {
-		t.Errorf("expected code %v, got %v", erx.ErrUnknown, err.Code)
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
 	}
 
-	if len(err.CallerInfos) == 0 {
+	if ctxErr.Code != erx.ErrUnknown {
+		t.Errorf("expected code %v, got %v", erx.ErrUnknown, ctxErr.Code)
+	}
+
+	if len(ctxErr.CallerInfos) == 0 {
 		t.Fatal("expected caller info, got none")
 	}
 }
@@ -73,8 +83,13 @@ func TestWCode(t *testing.T) {
 	const code erx.CodeImp = "400.0001"
 	err := erx.WCode(stdErr, code, "wrapped")
 
-	if err.Code != code {
-		t.Errorf("expected code %v, got %v", code, err.Code)
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
+	}
+
+	if ctxErr.Code != code {
+		t.Errorf("expected code %v, got %v", code, ctxErr.Code)
 	}
 
 	if !errors.Is(err, stdErr) {
@@ -101,8 +116,13 @@ func TestW_ErxError(t *testing.T) {
 		t.Fatal("erx.W should return the same error instance")
 	}
 
-	if err.Code != ErrTest {
-		t.Errorf("expected code %v, got %v", ErrTest, err.Code)
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
+	}
+
+	if ctxErr.Code != ErrTest {
+		t.Errorf("expected code %v, got %v", ErrTest, ctxErr.Code)
 	}
 }
 
@@ -114,19 +134,26 @@ func TestErrToCode(t *testing.T) {
 	stdErr := errors.New("a custom error for mapping")
 	err := erx.W(stdErr, "wrapped")
 
-	if err.Code != ErrCustom {
-		t.Errorf("expected code %v, got %v", ErrCustom, err.Code)
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
+	}
+	if ctxErr.Code != ErrCustom {
+		t.Errorf("expected code %v, got %v", ErrCustom, ctxErr.Code)
 	}
 }
 
 func TestCallStack(t *testing.T) {
 	err := erx.New(ErrTest, "test message")
-
-	if len(err.CallerInfos) < 1 {
+	var ctxErr *erx.CtxErr
+	if !errors.As(err, &ctxErr) {
+		t.Fatal("erx.New should return CtxErr")
+	}
+	if len(ctxErr.CallerInfos) < 1 {
 		t.Fatal("expected at least one caller info")
 	}
 
-	caller := err.CallerInfos[0]
+	caller := ctxErr.CallerInfos[0]
 	if !strings.Contains(caller.Function, "erx_test.TestCallStack") {
 		t.Errorf("expected function name 'erx_test.TestCallStack', got '%s'", caller.Function)
 	}
