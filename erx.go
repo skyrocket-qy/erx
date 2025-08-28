@@ -7,16 +7,16 @@ import (
 )
 
 // W wraps the given error with a call stack and optional additional context.
-func W(err error, msgs ...string) error {
+func W(err error, msgs ...string) *CtxErr {
 	return w(err, nil, msgs...)
 }
 
 // WCode wraps the given error with a call stack and an error code.
-func WCode(err error, code Code, msgs ...string) error {
+func WCode(err error, code Code, msgs ...string) *CtxErr {
 	return w(err, code, msgs...)
 }
 
-func w(err error, code Code, msgs ...string) error {
+func w(err error, code Code, msgs ...string) *CtxErr {
 	if err == nil {
 		return nil
 	}
@@ -54,7 +54,7 @@ func w(err error, code Code, msgs ...string) error {
 	return ctxErr
 }
 
-func New(code Code, msgs ...string) error {
+func New(code Code, msgs ...string) *CtxErr {
 	ctxErr := &CtxErr{
 		CallerInfos: getCallStack(3),
 		Code:        code,
@@ -67,7 +67,7 @@ func New(code Code, msgs ...string) error {
 	return ctxErr
 }
 
-func Newf(code Code, format string, args ...any) error {
+func Newf(code Code, format string, args ...any) *CtxErr {
 	ctxErr := &CtxErr{
 		CallerInfos: getCallStack(3),
 		Code:        code,
