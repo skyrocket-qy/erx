@@ -75,7 +75,7 @@ func getUserFromDB(id int) (*User, error) {
     if err != nil {
         if err == sql.ErrNoRows {
             // Wrap the original error and assign a more specific code
-            return nil, erx.WCode(err, ErrNotFound, "user not found in database")
+            return nil, erx.W(err, "user not found in database").SetCode(ErrNotFound)
         }
         // Wrap the original error, letting the default mapper handle the code
         return nil, erx.W(err, "database query failed")
@@ -212,10 +212,6 @@ func someDatabaseCall() error {
 
 - `erx.W(err error, msgs ...string) *CtxErr`
   Wraps an existing error, adding a call stack and an optional message. If the error is not already an `*erx.CtxErr`, it will be assigned a code by the `erx.ErrToCode` function.
-
-- `erx.WCode(err error, code Code, msgs ...string) *CtxErr`
-  Wraps an existing error, adding a call stack, an optional message, and a specific error code.
-
 ---
 
 ## ⚖️ License

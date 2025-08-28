@@ -68,20 +68,6 @@ func TestW_StandardError(t *testing.T) {
 	}
 }
 
-func TestWCode(t *testing.T) {
-	stdErr := errors.New("a standard error")
-	const code erx.CodeImp = "400.0001"
-	err := erx.WCode(stdErr, code, "wrapped")
-
-	if err.Code != code {
-		t.Errorf("expected code %v, got %v", code, err.Code)
-	}
-
-	if !errors.Is(err, stdErr) {
-		t.Fatal("expected error to be wrapping stdErr")
-	}
-}
-
 func TestErrorsAs(t *testing.T) {
 	err := erx.New(ErrTest, "test message")
 	var erxErr *erx.CtxErr

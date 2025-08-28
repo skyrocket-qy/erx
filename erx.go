@@ -8,29 +8,29 @@ import (
 
 // W wraps the given error with a call stack and optional additional context.
 func W(err error, msgs ...string) *CtxErr {
-	return w(err, nil, msgs...)
+	return w(err, msgs...)
 }
 
-// WCode wraps the given error with a call stack and an error code.
-func WCode(err error, code Code, msgs ...string) *CtxErr {
-	return w(err, code, msgs...)
+func Wf(err error, format string, args ...any) *CtxErr {
+	return w(err, fmt.Sprintf(format, args...))
 }
 
-func w(err error, code Code, msgs ...string) *CtxErr {
+func w(err error, msgs ...string) *CtxErr {
 	if err == nil {
 		return nil
 	}
 
 	var ctxErr *CtxErr
 	if !errors.As(err, &ctxErr) {
-		if code == nil {
-			code = ErrToCode(err)
-		}
 		ctxErr = &CtxErr{
 			cause:       err,
 			CallerInfos: getCallStack(4),
-			Code:        code,
+			Code:        ErrToCode(err),
 		}
+	}
+
+	if ctxErr == nil {
+		return ctxErr
 	}
 
 	if len(msgs) > 0 {
