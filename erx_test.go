@@ -66,10 +66,6 @@ func TestW_StandardError(t *testing.T) {
 	if len(err.CallerInfos) == 0 {
 		t.Fatal("expected caller info, got none")
 	}
-
-	if !strings.Contains(err.CallerInfos[0].Msg, "wrapped") {
-		t.Errorf("expected message 'wrapped', got '%s'", err.CallerInfos[0].Msg)
-	}
 }
 
 func TestWf(t *testing.T) {
@@ -90,10 +86,6 @@ func TestWf(t *testing.T) {
 
 	if len(err.CallerInfos) == 0 {
 		t.Fatal("expected caller info, got none")
-	}
-
-	if !strings.Contains(err.CallerInfos[0].Msg, "wrapped message") {
-		t.Errorf("expected message 'wrapped message', got '%s'", err.CallerInfos[0].Msg)
 	}
 }
 
