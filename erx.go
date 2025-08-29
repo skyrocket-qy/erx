@@ -29,26 +29,8 @@ func w(err error, msgs ...string) *CtxErr {
 		}
 	}
 
-	if ctxErr == nil {
-		return ctxErr
-	}
-
-	if len(msgs) > 0 {
-		msg := msgs[0]
-		pc, file, line, ok := runtime.Caller(3)
-		if !ok {
-			return ctxErr
-		}
-
-		funcName := runtime.FuncForPC(pc).Name()
-
-		for i := range ctxErr.CallerInfos {
-			ci := &ctxErr.CallerInfos[i]
-			if ci.Function == funcName && ci.File == file && ci.Line == line {
-				ci.Msg += " " + msg
-				break
-			}
-		}
+	if len(msgs) > 0 && len(ctxErr.CallerInfos) > 0 {
+		ctxErr.CallerInfos[0].Msg += " " + msgs[0]
 	}
 
 	return ctxErr
@@ -116,10 +98,6 @@ func FullMsg(err error) string {
 	var ctxErr *CtxErr
 	if !errors.As(err, &ctxErr) {
 		return err.Error()
-	}
-
-	if ctxErr == nil {
-		return ""
 	}
 
 	// Start with error code string
