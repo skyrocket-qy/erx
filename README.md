@@ -1,5 +1,10 @@
 # 🌟 erx — Minimal-Effort, Rich-Context Error Handling for Go
 
+<p align="center">
+  <a href="https://github.com/skyrocket-qy/erx/actions/workflows/ci.yml"><img src="https://github.com/skyrocket-qy/erx/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-95.3%25-brightgreen" alt="Coverage"></a>
+</p>
+
 `erx` provides a simple way to create and wrap errors, enriching them with call stacks and custom error codes without cluttering your code. It's designed for easy integration and clear, structured error reporting.
 
 ---
