@@ -107,3 +107,38 @@ func getCallStack(callerSkip ...int) (callerInfos []CallerInfo) {
 
 	return callerInfos
 }
+
+func FullMsg(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	var ctxErr *CtxErr
+	if !errors.As(err, &ctxErr) {
+		return err.Error()
+	}
+
+	if ctxErr == nil {
+		return ""
+	}
+
+	// Start with error code string
+	msg := ctxErr.Code.Str()
+
+	// Add caller infos if available
+	if len(ctxErr.CallerInfos) > 0 {
+		for _, ci := range ctxErr.CallerInfos {
+			msg += fmt.Sprintf("\n  at %s (%s:%d)", ci.Function, ci.File, ci.Line)
+			if ci.Msg != "" {
+				msg += fmt.Sprintf(": %s", ci.Msg)
+			}
+		}
+	}
+
+	// Recurse into cause if any
+	if ctxErr.cause != nil {
+		msg += "\nCaused by: " + FullMsg(ctxErr.cause)
+	}
+
+	return msg
+}
