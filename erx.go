@@ -142,3 +142,17 @@ func FullMsg(err error) string {
 
 	return msg
 }
+
+// IsCode reports whether any error in err's chain has the given Code.
+func IsCode(err error, code Code) bool {
+	if err == nil {
+		return false
+	}
+
+	var ctxErr *CtxErr
+	if errors.As(err, &ctxErr) {
+		return ctxErr.Code == code
+	}
+
+	return false
+}
