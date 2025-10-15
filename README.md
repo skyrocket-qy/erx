@@ -70,19 +70,15 @@ When you receive an error from another function (e.g., a database driver or a st
 
 ```go
 import (
-    "database/sql"
     "github.com/skyrocket-qy/erx"
 )
 
 func getUserFromDB(id int) (*User, error) {
-    user := &User{}
-    err := db.QueryRow("SELECT id, name FROM users WHERE id = ?", id).Scan(&user.ID, &user.Name)
+    err := db.QueryRow()
     if err != nil {
         if err == sql.ErrNoRows {
-            // Wrap the original error and assign a more specific code
             return nil, erx.W(err, "user not found in database").SetCode(ErrNotFound)
         }
-        // Wrap the original error, letting the default mapper handle the code
         return nil, erx.W(err, "database query failed")
     }
     return user, nil
@@ -158,17 +154,12 @@ func main() {
     err := someFunctionThatReturnsAnError()
     var ctxErr *erx.CtxErr
     if errors.As(err, &ctxErr) {
-        // Now you can work with the structured error
         if ctxErr.Code == ErrNotFound {
             // ...
         }
     }
 }
 ```
-
----
-
-## 🧠 Advanced Usage
 
 ### Custom Error Code Mapping
 
